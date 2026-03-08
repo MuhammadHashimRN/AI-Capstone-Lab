@@ -172,7 +172,8 @@ def handover_node(state: MultiAgentState) -> dict[str, Any]:
         if msg.content:
             agent_a_messages.append(msg.content)
 
-    agent_a_output = "\n".join(agent_a_messages[-3:])  # Last few messages as context
+    # Use last 3 messages to capture the final research summary with tool results
+    agent_a_output = "\n".join(agent_a_messages[-3:])
 
     logger.info("=== HANDOVER: Agent A → Agent B ===")
     return {

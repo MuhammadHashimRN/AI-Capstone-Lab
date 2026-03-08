@@ -192,7 +192,8 @@ def populate_sales_history(conn: sqlite3.Connection) -> None:
         "SKU-004": 4,
         "SKU-005": 10,
     }
-    # Monthly seasonality factors (holiday spike in Nov/Dec)
+    # Monthly seasonality factors: Jan-Feb post-holiday dip, summer steady,
+    # Nov-Dec holiday shopping spike (1.4x-1.6x baseline)
     seasonality = {
         1: 0.8, 2: 0.75, 3: 0.85, 4: 0.9, 5: 1.0, 6: 1.05,
         7: 1.1, 8: 1.15, 9: 1.0, 10: 1.1, 11: 1.4, 12: 1.6,

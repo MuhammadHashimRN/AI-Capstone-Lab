@@ -24,6 +24,14 @@ DATA_DIR = Path(__file__).parent / "Initial_Data"
 CHROMA_DIR = Path(__file__).parent / "chroma_db"
 COLLECTION_NAME = "inventory_agent_kb"
 
+# Chunking parameters: 800 tokens captures a full catalog entry or policy section;
+# 150-token overlap prevents losing sentences at chunk boundaries.
+CHUNK_SIZE = 800
+CHUNK_OVERLAP = 150
+# Larger chunk size for tables to avoid splitting pricing rows mid-entry.
+TABLE_CHUNK_SIZE = 1500
+TABLE_CHUNK_OVERLAP = 200
+
 # Metadata mapping: filename patterns → metadata tags
 METADATA_MAP: dict[str, dict[str, str]] = {
     "supplier_catalog": {
@@ -115,8 +123,8 @@ def load_and_chunk_pdfs() -> list:
     from langchain_text_splitters import RecursiveCharacterTextSplitter
 
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=800,
-        chunk_overlap=150,
+        chunk_size=CHUNK_SIZE,
+        chunk_overlap=CHUNK_OVERLAP,
         separators=["\n\n", "\n", ". ", " ", ""],
         length_function=len,
     )
@@ -149,8 +157,8 @@ def load_and_chunk_pdfs() -> list:
         # Smart chunking: if a chunk contains a table, increase chunk size to keep it together
         if is_table_content(full_text):
             table_splitter = RecursiveCharacterTextSplitter(
-                chunk_size=1500,
-                chunk_overlap=200,
+                chunk_size=TABLE_CHUNK_SIZE,
+                chunk_overlap=TABLE_CHUNK_OVERLAP,
                 separators=["\n\n", "\n", ". ", " ", ""],
             )
             chunks = table_splitter.create_documents(

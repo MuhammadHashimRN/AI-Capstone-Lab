@@ -21,7 +21,9 @@ logger = logging.getLogger(__name__)
 
 def main() -> None:
     """Run the single-agent ReAct loop with a test inventory check."""
-    from graph import app
+    from graph import build_graph
+
+    app = build_graph()
 
     test_query = (
         "Check inventory for SKU-001 and determine if we need to reorder. "
