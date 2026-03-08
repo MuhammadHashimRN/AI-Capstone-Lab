@@ -111,13 +111,16 @@ def main() -> None:
     print("PERSISTENCE VERIFICATION")
     print("=" * 70)
 
+    # A successful persistence test should have messages from both sessions;
+    # at least 3 messages indicates Session 2 has access to Session 1 context.
+    MIN_PERSISTED_MESSAGES = 3
     msg_count = len(result2["messages"])
     print(f"Total messages across both sessions: {msg_count}")
-    print(f"Memory persisted: {'YES' if msg_count > 2 else 'NO'}")
+    print(f"Memory persisted: {'YES' if msg_count >= MIN_PERSISTED_MESSAGES else 'NO'}")
     print(f"Checkpoint DB: {CHECKPOINT_DB}")
     print(f"Thread ID: {thread_id}")
 
-    if msg_count > 2:
+    if msg_count >= MIN_PERSISTED_MESSAGES:
         print("\n✅ SUCCESS: State was persisted and restored across sessions.")
     else:
         print("\n⚠️  WARNING: State may not have persisted correctly.")

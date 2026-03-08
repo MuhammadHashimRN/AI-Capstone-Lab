@@ -312,7 +312,7 @@ def calculate_order_qty(
 
         # EOQ formula: sqrt((2 * annual_demand * order_cost) / holding_cost)
         if holding_cost <= 0 or annual_demand <= 0:
-            return {"error": "Invalid parameters for EOQ calculation"}
+            return {"error": "EOQ calculation requires positive holding_cost and annual_demand values"}
 
         eoq = math.sqrt((2 * annual_demand * ORDER_COST) / holding_cost)
         eoq_rounded = max(1, round(eoq))

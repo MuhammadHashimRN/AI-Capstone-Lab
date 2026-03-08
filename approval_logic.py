@@ -286,7 +286,7 @@ def main() -> None:
             elif choice == "C":
                 print("\n❌ Purchase order CANCELLED.")
                 logger.info("PO cancelled by user for thread %s", thread_id)
-                with open("alerts.log", "a") as f:
+                with open(str(Path(__file__).parent / "alerts.log"), "a") as f:
                     f.write(f"PO CANCELLED by user for thread {thread_id}\n")
 
             elif choice == "E":

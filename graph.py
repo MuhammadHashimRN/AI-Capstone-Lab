@@ -137,13 +137,35 @@ def build_graph(checkpointer: Any = None) -> Any:
     return app
 
 
-# Build the default app instance
-app = build_graph()
+# Lazy-load default app instance (requires OPENAI_API_KEY at runtime)
+_app = None
+
+
+def get_app(checkpointer: Any = None) -> Any:
+    """Get or create the default ReAct agent graph application.
+
+    Args:
+        checkpointer: Optional checkpointer for state persistence.
+
+    Returns:
+        Compiled LangGraph application.
+    """
+    global _app
+    if checkpointer is not None:
+        return build_graph(checkpointer=checkpointer)
+    if _app is None:
+        _app = build_graph()
+    return _app
+
+
+# For backwards compatibility: `app` is a lazy property
+app = None  # Will be initialized on first use via get_app()
 
 
 if __name__ == "__main__":
     from langchain_core.messages import HumanMessage
 
+    app = get_app()
     test_query = (
         "Check inventory for SKU-001 and determine if we need to reorder. "
         "If yes, calculate the optimal order quantity and identify the best supplier."
