@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+eggs/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Environment variables
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Database files (generated at runtime)
+*.db
+*.sqlite
+checkpoint_db.sqlite
+
+# ChromaDB persistence
+chroma_db/
+
+# Generated data files
+Initial_Data/*.pdf
+Initial_Data/*.csv
+
+# Logs
+*.log
+alerts.log
+collaboration_trace.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Byte-compiled
+*.pyc
