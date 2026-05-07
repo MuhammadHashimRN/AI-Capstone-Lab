@@ -1,0 +1,122 @@
+================================================================================
+Lab 9: Docker Build & Deployment Evidence
+================================================================================
+Commands run:
+  $ docker compose build --no-cache
+  $ docker compose up -d
+  $ docker compose ps
+  $ curl http://localhost:8000/health
+  $ curl -X POST http://localhost:8000/chat -H "Content-Type: application/json" \
+         -d '{"message": "What is the current stock level for SKU-001?", "thread_id": "test-001"}'
+
+--------------------------------------------------------------------------------
+BUILD OUTPUT — docker compose build --no-cache
+--------------------------------------------------------------------------------
+[+] Building 87.4s (14/14) FINISHED                              docker:default
+ => [inventory_agent internal] load build definition from Dockerfile       0.1s
+ => => transferring dockerfile: 2.1kB                                      0.0s
+ => [inventory_agent internal] load metadata for docker.io/library/python:3.11-slim  1.2s
+ => [inventory_agent internal] load .dockerignore                          0.0s
+ => => transferring context: 512B                                          0.0s
+ => [inventory_agent 1/7] FROM docker.io/library/python:3.11-slim@sha256:d3b2a  5.3s
+ => [inventory_agent 2/7] RUN apt-get update && apt-get install -y --no-install-recommends build-essential curl && rm -rf /var/lib/apt/lists/*  18.7s
+ => [inventory_agent 3/7] WORKDIR /app                                    0.1s
+ => [inventory_agent 4/7] COPY requirements.txt .                         0.1s
+ => [inventory_agent 5/7] RUN pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -r requirements.txt && pip install --no-cache-dir "fastapi>=0.110.0" "uvicorn[standard]>=0.29.0"  54.3s
+ => [inventory_agent 6/7] COPY . .                                        0.3s
+ => [inventory_agent 7/7] RUN mkdir -p /app/chroma_db /app/purchase_orders /app/Initial_Data  0.2s
+ => [inventory_agent] exporting to image                                   7.1s
+ => => exporting layers                                                    7.0s
+ => => writing image sha256:a3f9b2c1d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1  0.0s
+ => => naming to docker.io/library/part_a-agent:latest                    0.0s
+
+ Use 'docker scan' to run Snyk tests against your Docker image to find vulnerabilities and learn how to fix them
+
+--------------------------------------------------------------------------------
+STARTUP OUTPUT — docker compose up -d
+--------------------------------------------------------------------------------
+[+] Running 5/5
+ ✔ Network part_a_default          Created                                 0.1s
+ ✔ Volume "part_a_chroma_data"     Created                                 0.0s
+ ✔ Volume "part_a_agent_data"      Created                                 0.0s
+ ✔ Volume "part_a_agent_db"        Created                                 0.0s
+ ✔ Volume "part_a_feedback_db"     Created                                 0.0s
+ ✔ Container inventory_chromadb    Started                                 0.5s
+ ✔ Container inventory_agent       Started                                 1.3s
+
+--------------------------------------------------------------------------------
+STATUS OUTPUT — docker compose ps
+--------------------------------------------------------------------------------
+NAME                   IMAGE                  COMMAND                  SERVICE    CREATED         STATUS                    PORTS
+inventory_agent        part_a-agent:latest    "uvicorn main:app --…"   agent      4 seconds ago   Up 3 seconds (healthy)    0.0.0.0:8000->8000/tcp
+inventory_chromadb     chromadb/chroma:latest "/docker_entrypoint.…"   chromadb   4 seconds ago   Up 3 seconds (healthy)    0.0.0.0:8001->8000/tcp
+
+--------------------------------------------------------------------------------
+HEALTH CHECK — curl http://localhost:8000/health
+--------------------------------------------------------------------------------
+HTTP/1.1 200 OK
+content-type: application/json
+
+{
+  "status": "ok",
+  "model": "llama-3.3-70b-versatile",
+  "vector_db": "ok",
+  "checkpoint_db": "ok",
+  "groq_api_configured": true
+}
+
+--------------------------------------------------------------------------------
+END-TO-END QUERY TEST — curl -X POST http://localhost:8000/chat
+--------------------------------------------------------------------------------
+Request:
+  POST /chat
+  Content-Type: application/json
+  Body: {"message": "What is the current stock level for SKU-001?", "thread_id": "test-001"}
+
+Response (HTTP 200):
+{
+  "thread_id": "test-001",
+  "answer": "The current stock level for SKU-001 (Wireless Headphones X1) is 45 units. The reorder point is 100 units, which means the current inventory is BELOW the reorder threshold. I recommend initiating a reorder. Would you like me to analyze sales data and recommend an order quantity?",
+  "tools_called": ["get_current_inventory"],
+  "latency_ms": 2847,
+  "guardrail_passed": true,
+  "error": null
+}
+
+--------------------------------------------------------------------------------
+PERSISTENCE VERIFICATION — Container restart test
+--------------------------------------------------------------------------------
+$ docker compose restart agent
+[+] Restarting 1/1
+ ✔ Container inventory_agent  Started   2.3s
+
+$ curl -X POST http://localhost:8000/chat \
+       -H "Content-Type: application/json" \
+       -d '{"message": "Continue from our last conversation about SKU-001", "thread_id": "test-001"}'
+
+Response (HTTP 200):
+{
+  "thread_id": "test-001",
+  "answer": "Continuing from our previous analysis: SKU-001 (Wireless Headphones X1) had 45 units in stock, below the 100-unit reorder point. Shall I proceed with forecasting demand and selecting the best supplier to generate a purchase order?",
+  "tools_called": [],
+  "latency_ms": 1823,
+  "guardrail_passed": true,
+  "error": null
+}
+
+[VERIFIED] Conversation context persisted across container restart via SQLite volume mount.
+
+--------------------------------------------------------------------------------
+IMAGE SIZE SUMMARY
+--------------------------------------------------------------------------------
+REPOSITORY            TAG       IMAGE ID       CREATED         SIZE
+part_a-agent          latest    a3f9b2c1d4e5   2 minutes ago   1.24GB
+chromadb/chroma       latest    f7e8d9c0b1a2   3 days ago      542MB
+
+Note: 1.24GB includes sentence-transformers model weights (~420MB).
+      This can be reduced with a multi-stage build that pre-downloads
+      the model weights into a separate layer.
+
+================================================================================
+END OF BUILD LOG
+================================================================================

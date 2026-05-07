@@ -1,0 +1,6 @@
+supplier_name,supplier_id,sku,product_name,unit_price,moq,lead_time_days,stock_status,volume_discount_threshold,volume_discount_pct,reliability_score,defect_rate_pct,payment_terms
+PrimeParts Direct,SUP-003,SKU-001,Wireless Headphones X1,16.00,25,3,In Stock,100,8,99,0.5,Net 15
+PrimeParts Direct,SUP-003,SKU-002,USB-C Charging Cable 2m,5.00,50,3,In Stock,300,10,99,0.3,Net 15
+PrimeParts Direct,SUP-003,SKU-003,Smart LED Desk Lamp,24.00,10,5,In Stock,50,7,99,0.7,Net 15
+PrimeParts Direct,SUP-003,SKU-004,Mechanical Keyboard Pro,38.00,15,4,In Stock,80,8,99,0.4,Net 15
+PrimeParts Direct,SUP-003,SKU-005,Portable Bluetooth Speaker,19.50,20,3,In Stock,80,7,99,0.6,Net 15

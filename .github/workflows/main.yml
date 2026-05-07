@@ -1,0 +1,108 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Lab 10: Agentic CI/CD Pipeline — Automated Quality Gate
+#
+# Triggers on every push to main and on pull requests targeting main.
+# Runs the evaluation pipeline (run_eval.py) and FAILS the build if any
+# metric drops below the configured thresholds in eval_thresholds.json.
+#
+# Secrets required (stored in GitHub → Settings → Secrets → Actions):
+#   GROQ_API_KEY       — Groq LLM API key for agent inference
+#   LANGSMITH_API_KEY  — (optional) LangSmith tracing key
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: Agent Quality Gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  evaluate:
+    name: Evaluate Agent Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    defaults:
+      run:
+        working-directory: Part_A
+
+    steps:
+      # ── 1. Checkout ─────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Python setup with pip cache ──────────────────────────────────
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: requirements.txt
+
+      # ── 3. Install dependencies ─────────────────────────────────────────
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ../requirements.txt
+          pip install "fastapi>=0.110.0" "uvicorn[standard]>=0.29.0"
+
+      # ── 4. Validate threshold config exists ─────────────────────────────
+      - name: Validate threshold config
+        run: |
+          python -c "
+          import json, sys
+          with open('eval_thresholds.json') as f:
+              cfg = json.load(f)
+          metrics = {t['metric'] for t in cfg['thresholds']}
+          required = {'min_faithfulness', 'min_relevancy', 'min_tool_accuracy'}
+          missing = required - metrics
+          if missing:
+              print(f'[FAIL] Missing threshold metrics: {missing}')
+              sys.exit(1)
+          print('[PASS] Threshold config valid:', metrics)
+          "
+
+      # ── 5. Run evaluation pipeline ───────────────────────────────────────
+      # Credentials are read from environment variables — no hardcoded keys.
+      # --max 5 limits to 5 test cases to keep CI fast (≈3 min on Groq free tier).
+      - name: Run evaluation pipeline
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
+          LANGCHAIN_PROJECT: inventory-reorder-agent-ci
+        run: python run_eval.py --max 5 --quiet
+
+      # ── 6. Upload results artifact (always, so failures are diagnosable) ─
+      - name: Upload evaluation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluation-results-${{ github.run_number }}
+          path: Part_A/evaluation_results.json
+          retention-days: 30
+
+      # ── 7. Show pass/fail summary in the CI log ──────────────────────────
+      - name: Print evaluation summary
+        if: always()
+        run: |
+          python -c "
+          import json, os
+          path = 'evaluation_results.json'
+          if not os.path.exists(path):
+              print('[INFO] No evaluation_results.json found — eval may have failed.')
+              exit(0)
+          with open(path) as f:
+              r = json.load(f)
+          scores = r.get('aggregate_scores', {})
+          metrics = r.get('metric_results', [])
+          print('=== EVALUATION SUMMARY ===')
+          print(f'  Timestamp : {r.get(\"timestamp\", \"N/A\")}')
+          print(f'  Cases run : {r.get(\"evaluated\", 0)} / {r.get(\"total_test_cases\", 0)}')
+          print(f'  Overall   : {\"PASS\" if r.get(\"passed\") else \"FAIL\"}')
+          print()
+          for m in metrics:
+              status = 'PASS' if m['passed'] else 'FAIL'
+              print(f'  [{status}] {m[\"metric\"]}: {m[\"score\"]:.3f} (threshold >= {m[\"threshold\"]})')
+          "

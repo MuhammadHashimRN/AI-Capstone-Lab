@@ -1,0 +1,6 @@
+sku,product_name,category,current_stock,reorder_point,safety_stock,max_capacity,warehouse_location,unit_cost,last_updated
+SKU-001,Wireless Headphones X1,Electronics,45,100,30,500,Warehouse-A,15.00,2026-03-10
+SKU-002,USB-C Charging Cable 2m,Accessories,80,150,50,1000,Warehouse-A,4.50,2026-03-10
+SKU-003,Smart LED Desk Lamp,Home Office,12,40,15,200,Warehouse-B,22.00,2026-03-10
+SKU-004,Mechanical Keyboard Pro,Electronics,200,120,40,400,Warehouse-A,35.00,2026-03-10
+SKU-005,Portable Bluetooth Speaker,Electronics,30,60,20,300,Warehouse-B,18.00,2026-03-10

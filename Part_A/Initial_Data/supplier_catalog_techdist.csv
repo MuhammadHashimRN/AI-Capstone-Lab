@@ -1,0 +1,6 @@
+supplier_name,supplier_id,sku,product_name,unit_price,moq,lead_time_days,stock_status,volume_discount_threshold,volume_discount_pct,reliability_score,defect_rate_pct,payment_terms
+TechDistributors Inc,SUP-001,SKU-001,Wireless Headphones X1,15.00,50,7,In Stock,200,10,95,1.2,Net 30
+TechDistributors Inc,SUP-001,SKU-002,USB-C Charging Cable 2m,4.50,100,5,In Stock,500,12,95,0.8,Net 30
+TechDistributors Inc,SUP-001,SKU-003,Smart LED Desk Lamp,22.00,20,10,In Stock,100,8,95,1.5,Net 30
+TechDistributors Inc,SUP-001,SKU-004,Mechanical Keyboard Pro,35.00,30,7,In Stock,150,10,95,1.0,Net 30
+TechDistributors Inc,SUP-001,SKU-005,Portable Bluetooth Speaker,18.00,25,8,Low Stock,100,9,95,1.3,Net 30

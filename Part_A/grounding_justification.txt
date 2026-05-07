@@ -1,0 +1,35 @@
+Grounding Justification: Why the Agent Needs Domain-Specific Data
+===================================================================
+
+The Dynamic Inventory Reorder Agent cannot rely solely on its pre-trained
+knowledge (the LLM "brain") for the following reasons:
+
+1. PRIVATE DATA: Supplier catalogs contain proprietary pricing, MOQs, lead times,
+   and reliability scores that are specific to our company's supplier agreements.
+   No pre-trained model has access to TechDistributors Inc's volume discount
+   thresholds or PrimeParts Direct's defect rates. Without RAG grounding, the
+   agent would hallucinate supplier information.
+
+2. REAL-TIME INVENTORY: Current stock levels (e.g., SKU-001 has 45 units) change
+   daily. The LLM's training data is months or years old and cannot reflect
+   today's warehouse state. The agent must query live inventory data to make
+   reorder decisions.
+
+3. HISTORICAL DEMAND PATTERNS: Sales history is company-specific and includes
+   seasonal patterns, promotional impacts, and return rates unique to our product
+   mix. Generic "electronics demand" knowledge from pre-training would produce
+   inaccurate forecasts for our specific SKUs.
+
+4. PROMOTIONAL CALENDAR: Upcoming events like "Spring Sale" or "Black Friday"
+   directly impact demand multipliers. These are internal business decisions that
+   no external LLM could predict. The agent needs this grounded context to adjust
+   order quantities proactively.
+
+5. SUPPLIER PERFORMANCE HISTORY: Reliability scores and defect rates are based on
+   our actual experience with each supplier. The multi-criteria supplier selection
+   algorithm depends on this proprietary performance data, not generic vendor
+   ratings.
+
+In summary, the RAG pipeline transforms the agent from a generic assistant into a
+domain expert with access to our company's specific operational data, enabling
+accurate, actionable procurement decisions rather than hallucinated guesses.

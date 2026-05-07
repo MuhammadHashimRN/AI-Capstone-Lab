@@ -1,0 +1,51 @@
+# Python bytecode & caches
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+ENV/
+
+# Secrets — NEVER bake API keys into the image
+.env
+*.env
+.env.*
+secrets/
+
+# Local databases — mounted as Docker volumes at runtime
+checkpoint_db.sqlite
+checkpoint_db.sqlite-shm
+checkpoint_db.sqlite-wal
+feedback_log.db
+
+# ChromaDB — mounted as a Docker volume at runtime
+chroma_db/
+
+# Generated purchase orders — mounted as a Docker volume at runtime
+purchase_orders/
+
+# Git history & CI configs (not needed inside the container)
+.git/
+.github/
+.gitignore
+
+# IDE and OS artifacts
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db
+
+# Test and evaluation artifacts (not needed at runtime)
+evaluation_results.json
+*.log
+
+# Build artifacts
+*.egg-info/
+dist/
+build/

@@ -1,0 +1,83 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Lab 9: Multi-Service Docker Compose
+#
+# Services:
+#   agent    — FastAPI application (main.py) backed by embedded ChromaDB
+#   chromadb — ChromaDB HTTP server (standalone vector DB service)
+#
+# Persistent data survives container restarts via named volumes:
+#   chroma_data  → ChromaDB collections and embeddings
+#   agent_data   → Purchase orders, SQLite checkpoint DB, feedback log
+#
+# Secrets are NEVER committed.  Provide them at runtime via a .env file:
+#   cp .env.example .env   # fill in your keys
+#   docker compose up
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── ChromaDB HTTP Server ─────────────────────────────────────────────────
+  # Runs the ChromaDB vector database as an independent HTTP service.
+  # The agent service can connect to it via http://chromadb:8001
+  # (set CHROMA_HOST=chromadb and CHROMA_PORT=8001 in the agent environment).
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: inventory_chromadb
+    restart: unless-stopped
+    ports:
+      - "8001:8000"           # Expose ChromaDB HTTP API on host port 8001
+    volumes:
+      - chroma_data:/chroma/.chroma/index   # Persist embeddings across restarts
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v2/heartbeat"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ── Inventory Reorder Agent ───────────────────────────────────────────────
+  # Builds from the local Dockerfile.  Waits for ChromaDB to be healthy
+  # before starting so that vector-search queries don't fail on boot.
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: inventory_agent
+    restart: unless-stopped
+    ports:
+      - "8000:8000"           # Expose FastAPI on host port 8000
+    depends_on:
+      chromadb:
+        condition: service_healthy
+    volumes:
+      - agent_data:/app/purchase_orders   # Persist generated purchase orders
+      - agent_db:/app/checkpoint_db.sqlite  # Persist LangGraph checkpoints
+      - feedback_db:/app/feedback_log.db    # Persist user feedback log
+      - ./Initial_Data:/app/Initial_Data:ro # Mount seed CSV data read-only
+    environment:
+      # ── LLM credentials (injected at runtime — NOT baked into image) ──
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - LANGSMITH_API_KEY=${LANGSMITH_API_KEY:-}
+      - LANGCHAIN_PROJECT=${LANGCHAIN_PROJECT:-inventory-reorder-agent}
+      # ── Application config ─────────────────────────────────────────────
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+# ── Named Volumes (data persists across `docker compose down` + `up`) ──────
+volumes:
+  chroma_data:
+    driver: local
+  agent_data:
+    driver: local
+  agent_db:
+    driver: local
+  feedback_db:
+    driver: local

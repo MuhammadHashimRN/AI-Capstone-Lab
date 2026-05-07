@@ -1,0 +1,177 @@
+[
+  {
+    "id": 1,
+    "query": "What is the current stock level for SKU-001 (Wireless Headphones X1)?",
+    "expected_answer": "The current stock for SKU-001 (Wireless Headphones X1) is 45 units, which is below the reorder point of 100 units. It is stored in Warehouse-A with a safety stock of 30 units and max capacity of 500 units.",
+    "required_tool": "get_current_inventory",
+    "category": "inventory_check"
+  },
+  {
+    "id": 2,
+    "query": "Does SKU-003 (Smart LED Desk Lamp) need reordering?",
+    "expected_answer": "Yes, SKU-003 (Smart LED Desk Lamp) needs reordering. Current stock is 12 units, which is below the reorder point of 40 units. It has a deficit of 28 units and is located in Warehouse-B.",
+    "required_tool": "get_current_inventory",
+    "category": "inventory_check"
+  },
+  {
+    "id": 3,
+    "query": "Is SKU-004 (Mechanical Keyboard Pro) below its reorder point?",
+    "expected_answer": "No, SKU-004 (Mechanical Keyboard Pro) does not need reordering. Current stock is 200 units, which is above the reorder point of 120 units. It has a surplus of 80 units over the reorder point.",
+    "required_tool": "get_current_inventory",
+    "category": "inventory_check"
+  },
+  {
+    "id": 4,
+    "query": "What is the current inventory status for SKU-005 (Portable Bluetooth Speaker)?",
+    "expected_answer": "SKU-005 (Portable Bluetooth Speaker) has 30 units in stock at Warehouse-B. The reorder point is 60 units, so it is below the reorder point with a deficit of 30 units. Safety stock is 20 units and max capacity is 300 units.",
+    "required_tool": "get_current_inventory",
+    "category": "inventory_check"
+  },
+  {
+    "id": 5,
+    "query": "Forecast demand for SKU-001 over the next 30 days.",
+    "expected_answer": "The 30-day demand forecast for SKU-001 (Wireless Headphones X1) is calculated using a weighted moving average with seasonal adjustment. The forecast accounts for historical sales patterns and any upcoming promotional events such as the Spring Sale.",
+    "required_tool": "forecast_demand",
+    "category": "forecasting"
+  },
+  {
+    "id": 6,
+    "query": "What is the demand forecast for SKU-002 (USB-C Charging Cable) for the next 30 days?",
+    "expected_answer": "The 30-day demand forecast for SKU-002 (USB-C Charging Cable 2m) is generated using weighted moving average analysis of historical sales data. The forecast includes any promotional uplift if upcoming events affect the Accessories category.",
+    "required_tool": "forecast_demand",
+    "category": "forecasting"
+  },
+  {
+    "id": 7,
+    "query": "Which suppliers are available for SKU-001?",
+    "expected_answer": "There are 3 suppliers for SKU-001 (Wireless Headphones X1): TechDistributors Inc (SUP-001) at $15.00/unit with 7-day lead time and 95% reliability, GlobalElec Supply (SUP-002) at $14.50/unit with 14-day lead time and 88% reliability, and PrimeParts Direct (SUP-003) at $16.00/unit with 3-day lead time and 99% reliability.",
+    "required_tool": "query_all_suppliers",
+    "category": "supplier_query"
+  },
+  {
+    "id": 8,
+    "query": "Who is the cheapest supplier for SKU-003 (Smart LED Desk Lamp)?",
+    "expected_answer": "The cheapest supplier for SKU-003 is GlobalElec Supply (SUP-002) at $20.50/unit. TechDistributors Inc offers it at $22.00/unit and PrimeParts Direct at $24.00/unit.",
+    "required_tool": "query_all_suppliers",
+    "category": "supplier_query"
+  },
+  {
+    "id": 9,
+    "query": "Select the best supplier for SKU-001 if I need 300 units.",
+    "expected_answer": "Using multi-criteria weighted scoring (Price 40%, Lead Time 25%, Reliability 20%, Quality 15%), the recommended supplier for 300 units of SKU-001 is determined by comparing TechDistributors Inc, GlobalElec Supply, and PrimeParts Direct. Volume discounts are applied where the quantity exceeds the discount threshold.",
+    "required_tool": "select_best_supplier",
+    "category": "supplier_selection"
+  },
+  {
+    "id": 10,
+    "query": "Which supplier has the fastest lead time for SKU-005?",
+    "expected_answer": "PrimeParts Direct (SUP-003) has the fastest lead time for SKU-005 (Portable Bluetooth Speaker) at 3 days. TechDistributors Inc has 8 days (but low stock) and GlobalElec Supply has 15 days (but is out of stock).",
+    "required_tool": "query_all_suppliers",
+    "category": "supplier_query"
+  },
+  {
+    "id": 11,
+    "query": "Calculate the optimal order quantity for SKU-001 given forecasted demand of 250 units, lead time of 7 days, and safety stock of 30.",
+    "expected_answer": "The optimal order quantity is calculated using the EOQ model. With forecasted demand of 250 units, lead time of 7 days, safety stock of 30, current stock of 45 units, and max capacity of 500 units, the order quantity balances ordering cost against holding cost while respecting warehouse constraints.",
+    "required_tool": "calculate_order_quantity",
+    "category": "order_calculation"
+  },
+  {
+    "id": 12,
+    "query": "What is the optimal order quantity for SKU-003 with demand forecast of 80 units, lead time of 10 days, and safety stock of 15?",
+    "expected_answer": "The optimal order quantity for SKU-003 is calculated with EOQ considering current stock of 12 units, max capacity of 200 units, and the given parameters. The minimum needed is at least 83 units (80 - 12 + 15) to cover forecast plus safety stock.",
+    "required_tool": "calculate_order_quantity",
+    "category": "order_calculation"
+  },
+  {
+    "id": 13,
+    "query": "Generate a purchase order for 300 units of SKU-001 from TechDistributors Inc at $13.50/unit.",
+    "expected_answer": "A purchase order has been generated with a PO number, for 300 units of Wireless Headphones X1 (SKU-001) from TechDistributors Inc (SUP-001) at $13.50/unit, totaling $4,050.00. The expected delivery date is approximately 10 days from generation. The PO is saved as a JSON file.",
+    "required_tool": "generate_purchase_order",
+    "category": "purchase_order"
+  },
+  {
+    "id": 14,
+    "query": "What are the historical sales for SKU-001?",
+    "expected_answer": "The sales data for SKU-001 (Wireless Headphones X1) shows historical daily sales records including quantity sold, returns, and net demand. The data includes information about promotional periods and average daily demand calculated across the full history.",
+    "required_tool": "get_sales_data",
+    "category": "sales_analysis"
+  },
+  {
+    "id": 15,
+    "query": "Show me the sales data for SKU-002 (USB-C Charging Cable).",
+    "expected_answer": "Sales history for SKU-002 (USB-C Charging Cable 2m) includes daily transaction records with quantities sold, returns, net demand, and whether promotions were active. The data provides average daily demand and total sales figures.",
+    "required_tool": "get_sales_data",
+    "category": "sales_analysis"
+  },
+  {
+    "id": 16,
+    "query": "Search the knowledge base for information about upcoming promotions affecting electronics.",
+    "expected_answer": "The knowledge base contains promotional events affecting the Electronics category including: Spring Sale (March 15-22, 1.5x demand multiplier, 15% discount), Summer Tech Fest (June 15-25, 1.6x multiplier, 10% discount), Back to School (August 15-September 5, 2.0x multiplier, 20% discount), Black Friday (November 27-30, 3.0x multiplier, 30% discount), and Holiday Season (December 10-25, 2.5x multiplier, 15% discount).",
+    "required_tool": "query_knowledge_base",
+    "category": "knowledge_base"
+  },
+  {
+    "id": 17,
+    "query": "Find supplier information for desk lamps in the knowledge base.",
+    "expected_answer": "The knowledge base contains supplier catalog entries for Smart LED Desk Lamp (SKU-003) from three suppliers: TechDistributors Inc at $22.00/unit (10-day lead time), GlobalElec Supply at $20.50/unit (18-day lead time), and PrimeParts Direct at $24.00/unit (5-day lead time).",
+    "required_tool": "query_knowledge_base",
+    "category": "knowledge_base"
+  },
+  {
+    "id": 18,
+    "query": "Run a full reorder analysis for SKU-005 (Portable Bluetooth Speaker). Check inventory, forecast demand, and select the best supplier.",
+    "expected_answer": "SKU-005 has 30 units in stock, below the reorder point of 60. After analyzing sales data and forecasting 30-day demand, the agent evaluates available suppliers. Note that GlobalElec Supply is out of stock for this SKU, so only TechDistributors Inc (low stock, $18.00, 8-day lead) and PrimeParts Direct ($19.50, 3-day lead, 99% reliability) are viable options.",
+    "required_tool": "multiple",
+    "category": "full_workflow"
+  },
+  {
+    "id": 19,
+    "query": "Check inventory for SKU-002 and determine if it needs reordering. If so, who should we order from?",
+    "expected_answer": "SKU-002 (USB-C Charging Cable 2m) has 80 units in stock, which is below the reorder point of 150 units. It needs reordering with a deficit of 70 units. The three available suppliers are TechDistributors Inc ($4.50, 5-day lead), GlobalElec Supply ($4.00, 12-day lead), and PrimeParts Direct ($5.00, 3-day lead). The best supplier depends on the weighted scoring criteria.",
+    "required_tool": "multiple",
+    "category": "full_workflow"
+  },
+  {
+    "id": 20,
+    "query": "What is the reliability score for each supplier offering SKU-004 (Mechanical Keyboard Pro)?",
+    "expected_answer": "The reliability scores for SKU-004 suppliers are: TechDistributors Inc at 95%, GlobalElec Supply at 88%, and PrimeParts Direct at 99%. PrimeParts Direct has the highest reliability but also the highest price at $38.00/unit.",
+    "required_tool": "query_all_suppliers",
+    "category": "supplier_query"
+  },
+  {
+    "id": 21,
+    "query": "Which SKUs currently need reordering across the entire inventory?",
+    "expected_answer": "Based on current inventory levels, the following SKUs need reordering (stock below reorder point): SKU-001 (45 units, reorder at 100), SKU-002 (80 units, reorder at 150), SKU-003 (12 units, reorder at 40), and SKU-005 (30 units, reorder at 60). SKU-004 does NOT need reordering (200 units, reorder at 120).",
+    "required_tool": "get_current_inventory",
+    "category": "inventory_check"
+  },
+  {
+    "id": 22,
+    "query": "What volume discount does TechDistributors Inc offer for SKU-001 if we order more than 200 units?",
+    "expected_answer": "TechDistributors Inc offers a 10% volume discount on SKU-001 (Wireless Headphones X1) for orders above 200 units. The base price is $15.00/unit, so with the discount the effective price would be $13.50/unit.",
+    "required_tool": "query_all_suppliers",
+    "category": "supplier_query"
+  },
+  {
+    "id": 23,
+    "query": "Compare all suppliers for SKU-002 by price and lead time.",
+    "expected_answer": "Supplier comparison for SKU-002 (USB-C Charging Cable 2m): TechDistributors Inc offers $4.50/unit with 5-day lead time, GlobalElec Supply offers $4.00/unit with 12-day lead time, and PrimeParts Direct offers $5.00/unit with 3-day lead time. GlobalElec is cheapest but slowest; PrimeParts is most expensive but fastest.",
+    "required_tool": "query_all_suppliers",
+    "category": "supplier_query"
+  },
+  {
+    "id": 24,
+    "query": "What is the warehouse location and capacity for SKU-003?",
+    "expected_answer": "SKU-003 (Smart LED Desk Lamp) is stored in Warehouse-B with a maximum capacity of 200 units. Current stock is 12 units, leaving 188 units of available capacity.",
+    "required_tool": "get_current_inventory",
+    "category": "inventory_check"
+  },
+  {
+    "id": 25,
+    "query": "Is there a Black Friday promotion coming up and what categories does it affect?",
+    "expected_answer": "Yes, the Black Friday promotion runs from November 27-30, 2026. It affects Electronics, Accessories, and Home Office categories with a 3.0x expected demand multiplier and 30% discount. It is the biggest annual sale event with deep discounts across all categories.",
+    "required_tool": "query_knowledge_base",
+    "category": "knowledge_base"
+  }
+]

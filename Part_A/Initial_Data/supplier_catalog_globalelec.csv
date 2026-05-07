@@ -1,0 +1,6 @@
+supplier_name,supplier_id,sku,product_name,unit_price,moq,lead_time_days,stock_status,volume_discount_threshold,volume_discount_pct,reliability_score,defect_rate_pct,payment_terms
+GlobalElec Supply,SUP-002,SKU-001,Wireless Headphones X1,14.50,100,14,In Stock,300,12,88,2.0,Net 45
+GlobalElec Supply,SUP-002,SKU-002,USB-C Charging Cable 2m,4.00,200,12,In Stock,800,15,88,1.5,Net 45
+GlobalElec Supply,SUP-002,SKU-003,Smart LED Desk Lamp,20.50,40,18,In Stock,200,10,88,2.2,Net 45
+GlobalElec Supply,SUP-002,SKU-004,Mechanical Keyboard Pro,32.00,50,14,In Stock,200,12,88,1.8,Net 45
+GlobalElec Supply,SUP-002,SKU-005,Portable Bluetooth Speaker,16.50,50,15,Out of Stock,150,10,88,2.1,Net 45

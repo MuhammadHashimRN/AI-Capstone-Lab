@@ -1,0 +1,50 @@
+Bottleneck Analysis — Lab 7: Trace-Based Performance Review
+=============================================================
+
+After running 5 complex queries through the agent and analyzing execution
+traces, the primary bottleneck is the LLM inference step in the agent_node.
+
+FINDINGS:
+
+1. LATENCY BOTTLENECK: The agent_node (LLM reasoning) accounts for ~92% of
+   total execution time. Each ReAct loop iteration requires a full LLM call
+   to Groq (Llama-3.3-70B), averaging 1,100-1,250ms per call. A typical
+   single-tool query requires 2 agent_node invocations (initial reasoning +
+   final answer), while a full reorder workflow requires 4-5 invocations,
+   pushing total latency to 6-9 seconds.
+
+2. TOOL EXECUTION: All tool functions (get_current_inventory, forecast_demand,
+   select_best_supplier, etc.) execute in under 60ms since they read from
+   local CSV files. The tool_node is NOT a bottleneck.
+
+3. GUARDRAIL OVERHEAD: The guardrail_node adds ~300ms when running the
+   LLM-as-a-Judge (Approach B). The deterministic check alone takes <5ms.
+   For production use, the deterministic-only path could be used for most
+   requests, reserving LLM-as-a-Judge for ambiguous inputs.
+
+4. FAILURE POINT IDENTIFIED: In 1 of 5 complex queries, the agent entered
+   an extra reasoning loop because the LLM did not parse the tool result
+   correctly on the first pass. This added an unnecessary ~2,200ms. The
+   failure occurred at the agent_node after receiving the forecast_demand
+   tool result — the agent re-called forecast_demand with identical args.
+   Root cause: the LLM occasionally misinterprets structured JSON tool
+   output and decides it needs to "verify" by calling the tool again.
+
+PROPOSED FIXES:
+
+1. REDUCE LLM CALLS: For common single-tool queries (e.g., inventory check),
+   consider a "fast path" that bypasses the ReAct loop and directly calls
+   the appropriate tool based on intent classification.
+
+2. TOOL RESULT FORMATTING: Simplify the JSON output of tools to reduce token
+   count and make it easier for the LLM to parse. This may prevent redundant
+   tool re-calls.
+
+3. CACHING: Implement a short-lived cache for tool results (e.g., 60-second
+   TTL for inventory data) so that repeated calls within the same session
+   return instantly.
+
+4. GUARDRAIL OPTIMIZATION: Use the deterministic guardrail as the primary
+   layer and only invoke the LLM judge when the input is ambiguous (e.g.,
+   partial keyword matches). This saves ~300ms per request for clearly
+   safe or clearly unsafe inputs.

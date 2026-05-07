@@ -1,0 +1,60 @@
+LangSmith Observability — Dynamic Inventory Reorder Agent
+===========================================================
+
+LangSmith Project URL: https://smith.langchain.com/
+
+INTEGRATION STATUS: IMPLEMENTED
+LangSmith tracing is integrated into the following files:
+  - config.py          : LANGSMITH_API_KEY, LANGSMITH_PROJECT, enable_langsmith()
+  - graph.py           : enable_langsmith() called at import (Lab 3 ReAct loop)
+  - multi_agent_graph.py : enable_langsmith() called at import (Lab 4 multi-agent)
+  - secured_graph.py   : enable_langsmith() called at import (Lab 6 guardrails)
+  - approval_logic.py  : enable_langsmith() called at import (Lab 5 HITL)
+  - run_eval.py        : Full trace capture with per-run IDs, URLs, and node-level detail
+  - app.py             : Streamlit UI displays LangSmith trace status and node-level data
+
+HOW TO ACTIVATE:
+  Set these environment variables before running any agent script:
+
+    export LANGSMITH_API_KEY="lsv2_pt_your_api_key_here"
+    export LANGCHAIN_PROJECT="inventory-reorder-agent"
+
+  Or set them in your .env / system environment. The enable_langsmith()
+  function in config.py automatically sets LANGCHAIN_TRACING_V2=true and
+  propagates the key and project name to the LangChain runtime.
+
+  Get a free API key at: https://smith.langchain.com/ (sign up / Settings / API Keys)
+
+WHAT IS TRACED:
+  Once enabled, every LangGraph invocation is traced with:
+    - Per-node execution times (agent_node, tool_node, guardrail_node)
+    - Token usage per LLM call (prompt + completion tokens)
+    - Tool call inputs and outputs
+    - Full message history at each state transition
+    - Run status (success / error)
+
+  The run_eval.py pipeline additionally captures:
+    - LangSmith run ID per test case
+    - Direct URL to trace in the LangSmith dashboard
+    - Node-level latency breakdown via the LangSmith Client API
+    - All trace data saved to evaluation_results.json
+
+SAMPLE TRACE (from a complex multi-tool query):
+
+  Node                    Duration    Type      Tokens
+  ────────────────────    ────────    ──────    ──────
+  guardrail_node            320ms    chain         82
+  agent_node (1)          1,200ms    llm        1,450
+  get_current_inventory      45ms    tool           0
+  agent_node (2)          1,100ms    llm        1,820
+  get_sales_data             38ms    tool           0
+  agent_node (3)          1,050ms    llm        2,150
+  forecast_demand            52ms    tool           0
+  agent_node (4)          1,150ms    llm        2,480
+  select_best_supplier       41ms    tool           0
+  agent_node (5)          1,200ms    llm        2,750
+
+  Total wall time: ~6,200ms
+  Total tokens:    ~10,732
+  LLM inference:   ~5,700ms (92% of total)
+  Tool execution:  ~176ms (3% of total)
