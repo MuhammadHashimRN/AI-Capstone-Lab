@@ -64,7 +64,16 @@ jobs:
           print('[PASS] Threshold config valid:', metrics)
           "
 
-      # ── 5. Run evaluation pipeline ───────────────────────────────────────
+      # ── 5. Ingest seed data into ChromaDB ───────────────────────────────
+      # The chroma_db/ directory is gitignored (binary index files).
+      # Ingest the CSV seed data so the agent has a populated knowledge base
+      # before evaluation queries are run.
+      - name: Ingest knowledge base
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: python ingest_data.py
+
+      # ── 6. Run evaluation pipeline ───────────────────────────────────────
       # Credentials are read from environment variables — no hardcoded keys.
       # --max 5 limits to 5 test cases to keep CI fast (≈3 min on Groq free tier).
       - name: Run evaluation pipeline
@@ -74,7 +83,7 @@ jobs:
           LANGCHAIN_PROJECT: inventory-reorder-agent-ci
         run: python run_eval.py --max 5 --quiet
 
-      # ── 6. Upload results artifact (always, so failures are diagnosable) ─
+      # ── 7. Upload results artifact (always, so failures are diagnosable) ─
       - name: Upload evaluation results
         if: always()
         uses: actions/upload-artifact@v4
@@ -83,7 +92,7 @@ jobs:
           path: Part_A/evaluation_results.json
           retention-days: 30
 
-      # ── 7. Show pass/fail summary in the CI log ──────────────────────────
+      # ── 8. Show pass/fail summary in the CI log ──────────────────────────
       - name: Print evaluation summary
         if: always()
         run: |
