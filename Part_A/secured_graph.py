@@ -64,7 +64,18 @@ STRICT RULES:
 - NEVER perform actions outside inventory management.
 - NEVER output file paths, API keys, or internal metadata.
 - If asked about anything unrelated to inventory, politely redirect.
-- Always explain your reasoning at each step with precise data."""
+- Always explain your reasoning at each step with precise data.
+
+USER-INTENT RULES (Final-Exam Part A improvement):
+- When the user asks for a *literal extreme* — "lowest price", "cheapest",
+  "highest reliability", "shortest lead time", etc. — use `query_all_suppliers`
+  and answer directly by sorting on the requested field. Do NOT call
+  `select_best_supplier`; that tool returns the multi-criteria optimum, not
+  the literal minimum/maximum, and will surface a different supplier.
+- When the user supplies explicit parameters to `generate_purchase_order`
+  (sku, supplier_name, quantity, unit_price), invoke that tool DIRECTLY
+  with the user's values. Do NOT re-run forecasting, supplier scoring, or
+  EOQ — the user has already made those decisions."""
 
 
 # ─── Node Definitions ──────────────────────────────────────────────────────

@@ -1,0 +1,34 @@
+digraph SelfRAG {
+    rankdir=TB;
+    bgcolor="white";
+    node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=11];
+    edge [fontname="Helvetica", fontsize=9];
+
+    start [label="User Query", shape=oval, fillcolor="#cfe8ff", color="#1f6feb"];
+    route [label="route_query\n(LLM classifier)", fillcolor="#fff3cd", color="#d29922"];
+    direct [label="direct_answer\n(no retrieval)", fillcolor="#d4edda", color="#3fb950"];
+    retrieve [label="retrieve\n(ChromaDB top-8)", fillcolor="#cfe8ff", color="#1f6feb"];
+    grade [label="grade_documents\n(per-doc YES/NO)", fillcolor="#cfe8ff", color="#1f6feb"];
+    web [label="web_search\n(DuckDuckGo)", fillcolor="#f8d7da", color="#f85149"];
+    gen [label="generate\n(answer w/ context)", fillcolor="#cfe8ff", color="#1f6feb"];
+    hcheck [label="hallucination_check\n(grounded? retry < 2?)", fillcolor="#fff3cd", color="#d29922"];
+    finalize [label="finalize\n(+disclaimer if unverified)", fillcolor="#d4edda", color="#3fb950"];
+    end [label="Final Answer", shape=oval, fillcolor="#d4edda", color="#3fb950"];
+
+    start -> route;
+    route -> direct [label="NO_RETRIEVE"];
+    route -> retrieve [label="RETRIEVE"];
+    direct -> end;
+    retrieve -> grade;
+    grade -> gen [label="≥1 relevant"];
+    grade -> web [label="0 relevant"];
+    web -> gen;
+    gen -> hcheck;
+    hcheck -> finalize [label="grounded"];
+    hcheck -> gen [label="not grounded\n& retry<2", style=dashed, color="#f85149"];
+    hcheck -> finalize [label="retry≥2", color="#d29922"];
+    finalize -> end;
+
+    { rank=same; direct; retrieve; }
+    { rank=same; gen; web; }
+}

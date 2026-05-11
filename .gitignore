@@ -25,6 +25,7 @@ build/
 
 # ── ChromaDB index ────────────────────────────────────────────────────────────
 Part_A/chroma_db/
+Final_Exam/Part_B/chroma_db/
 
 # ── Generated artefacts (reproducible from source) ───────────────────────────
 Part_A/purchase_orders/

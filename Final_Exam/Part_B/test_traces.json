@@ -1,0 +1,230 @@
+[
+  {
+    "id": 1,
+    "scenario": "Retrieval NOT needed (greeting)",
+    "query": "Hi there! How are you today?",
+    "expected_path": "route_query -> direct_answer -> END (no retrieval, no grading)",
+    "expected_behavior": "Agent should classify as NO_RETRIEVE and produce a short conversational reply.",
+    "result": {
+      "query": "Hi there! How are you today?",
+      "final_answer": "Hello, I'm doing well, thank you for asking. I'm here to help you with any questions you may have about our courses, policies, or faculty. Is there something specific you'd like to know or discuss?",
+      "needs_retrieval": false,
+      "retrieval_reasoning": "The query is a greeting and does not require access to university documents.",
+      "used_web_fallback": false,
+      "retrieved_doc_count": 0,
+      "graded_doc_count": 0,
+      "web_result_count": 0,
+      "retry_count": 0,
+      "hallucination_grounded": true,
+      "decision_trace": [
+        "route_query: NO_RETRIEVE \u2014 The query is a greeting and does not require access to university documents.",
+        "direct_answer: produced reply without retrieval"
+      ],
+      "latency_ms": 3203,
+      "graded_doc_metadata": []
+    },
+    "elapsed_ms": 3203
+  },
+  {
+    "id": 2,
+    "scenario": "Retrieval needed, documents relevant",
+    "query": "What are the prerequisites and credit hours for CS-301 Artificial Intelligence?",
+    "expected_path": "route_query -> retrieve -> grade -> generate -> hallucination_check -> finalize",
+    "expected_behavior": "Agent should retrieve the CS-301 chunk, mark only that doc relevant, and answer with the correct prereqs (CS-102, MATH-201) and credit hours (3).",
+    "result": {
+      "query": "What are the prerequisites and credit hours for CS-301 Artificial Intelligence?",
+      "final_answer": "The prerequisites for CS-301 Artificial Intelligence are CS-102 and MATH-201. The course is worth 3 credit hours.",
+      "needs_retrieval": true,
+      "retrieval_reasoning": "The query requires specific course information from the university's internal documents.",
+      "used_web_fallback": false,
+      "retrieved_doc_count": 8,
+      "graded_doc_count": 1,
+      "web_result_count": 0,
+      "retry_count": 0,
+      "hallucination_grounded": true,
+      "decision_trace": [
+        "route_query: RETRIEVE \u2014 The query requires specific course information from the university's internal documents.",
+        "retrieve_node: pulled 8 candidate chunks from ChromaDB",
+        "grade_documents: kept 1/8 as relevant\n  doc[0] catalog/CS-301 Artificial Intelligence -> YES\n  doc[1] catalog/CS-302 Machine Learning -> NO\n  doc[2] catalog/CS-501 Advanced Machine Learning -> NO\n  doc[3] catalog/CS-101 Introduction to Programming -> NO\n  doc[4] policy/Degree Requirements -> NO\n  doc[5] catalog/CS-350 Operating Systems -> NO\n  doc[6] catalog/CS-310 Software Engineering -> NO\n  doc[7] catalog/CS-520 Cloud Computing & Distributed Systems -> NO",
+        "generate_node: produced initial answer using kb context",
+        "hallucination_check: grounded=True  (YES)",
+        "finalize: response grounded \u2014 returning to user"
+      ],
+      "latency_ms": 32684,
+      "graded_doc_metadata": [
+        {
+          "course_code": "CS-301",
+          "department": "CS",
+          "source_file": "CS_Department_Catalog.pdf",
+          "doc_type": "catalog",
+          "course_level": "undergraduate",
+          "faculty_name": "",
+          "section_title": "CS-301 Artificial Intelligence"
+        }
+      ]
+    },
+    "elapsed_ms": 32684
+  },
+  {
+    "id": 3,
+    "scenario": "Retrieval needed but docs irrelevant -> web fallback",
+    "query": "Where on the XYZ National University campus is the official on-campus student hostel located and how do I apply for a room?",
+    "expected_path": "route_query -> retrieve -> grade (all irrelevant) -> web_search -> generate -> hallucination_check -> finalize",
+    "expected_behavior": "The KB has no housing info, so all retrieved docs should be graded NO; the agent must fall back to web search.",
+    "result": {
+      "query": "Where on the XYZ National University campus is the official on-campus student hostel located and how do I apply for a room?",
+      "final_answer": "I'm unable to answer your question as there is no available context.",
+      "needs_retrieval": true,
+      "retrieval_reasoning": "The query requires information from the university's internal documents, specifically the student housing policy.",
+      "used_web_fallback": true,
+      "retrieved_doc_count": 8,
+      "graded_doc_count": 0,
+      "web_result_count": 0,
+      "retry_count": 0,
+      "hallucination_grounded": true,
+      "decision_trace": [
+        "route_query: RETRIEVE \u2014 The query requires information from the university's internal documents, specifically the student housing policy.",
+        "retrieve_node: pulled 8 candidate chunks from ChromaDB",
+        "grade_documents: kept 0/8 as relevant\n  doc[0] policy/Preamble -> NO\n  doc[1] catalog/Department Overview -> NO\n  doc[2] catalog/Department Overview -> NO\n  doc[3] catalog/Department Overview -> NO\n  doc[4] policy/Academic Calendar 2025\u201326 -> NO\n  doc[5] faculty/Faculty Contact & Office Hours -> NO\n  doc[6] policy/Fee Structure (Per Semester) -> NO\n  doc[7] policy/Transfer Credit Policy -> NO",
+        "web_search: pulled 0 web results as fallback context",
+        "generate_node: produced initial answer using none context",
+        "hallucination_check: grounded=True  (YES)",
+        "finalize: response grounded \u2014 returning to user"
+      ],
+      "latency_ms": 16067,
+      "graded_doc_metadata": []
+    },
+    "elapsed_ms": 16067
+  },
+  {
+    "id": 4,
+    "scenario": "Hallucination self-check retry",
+    "query": "Which specific textbook (give title, author, and edition) is the required reading for CS-301 Artificial Intelligence at XYZ National University?",
+    "expected_path": "route_query -> retrieve -> grade -> generate -> hallucination_check (likely NO on attempt 1) -> generate (retry) -> hallucination_check -> finalize",
+    "expected_behavior": "The CS-301 chunk is retrieved and graded relevant, but it does not list a textbook. If the model invents Russell & Norvig (a common training-data answer), the self-check should detect the unsupported claim and trigger a retry \u2014 eventually finalizing with either a disclaimer or a grounded \u2018textbook not listed in the catalog\u2019 answer.",
+    "result": {
+      "query": "Which specific textbook (give title, author, and edition) is the required reading for CS-301 Artificial Intelligence at XYZ National University?",
+      "final_answer": "Unfortunately, I am unable to answer the user's question as the context provided does not mention the required textbook for CS-301 Artificial Intelligence at XYZ National University.\n\n[Note: I could not fully verify this answer against the university's documents after multiple attempts. Please confirm with the official sources.]",
+      "needs_retrieval": true,
+      "retrieval_reasoning": "The query asks for specific course information, requiring a lookup in the university's internal documents.",
+      "used_web_fallback": true,
+      "retrieved_doc_count": 8,
+      "graded_doc_count": 0,
+      "web_result_count": 3,
+      "retry_count": 2,
+      "hallucination_grounded": false,
+      "decision_trace": [
+        "route_query: RETRIEVE \u2014 The query asks for specific course information, requiring a lookup in the university's internal documents.",
+        "retrieve_node: pulled 8 candidate chunks from ChromaDB",
+        "grade_documents: kept 0/8 as relevant\n  doc[0] catalog/CS-301 Artificial Intelligence -> NO\n  doc[1] faculty/Faculty Row -> NO\n  doc[2] catalog/Department Overview -> NO\n  doc[3] catalog/CS-101 Introduction to Programming -> NO\n  doc[4] catalog/CS-501 Advanced Machine Learning -> NO\n  doc[5] catalog/CS-302 Machine Learning -> NO\n  doc[6] faculty/Faculty Row -> NO\n  doc[7] catalog/CS-202 Database Systems -> NO",
+        "web_search: pulled 3 web results as fallback context",
+        "generate_node: produced initial answer using web context",
+        "hallucination_check: grounded=False  (NO)",
+        "generate_node: produced retry 1 answer using web context",
+        "hallucination_check: grounded=False  (NO)",
+        "finalize: appended unverified disclaimer (retry limit reached)"
+      ],
+      "latency_ms": 21388,
+      "graded_doc_metadata": []
+    },
+    "elapsed_ms": 21388
+  },
+  {
+    "id": 5,
+    "scenario": "Creative case \u2014 faculty + course lookup",
+    "query": "Which professor in the Electrical Engineering department teaches Signals & Systems, and what is their office number?",
+    "expected_path": "route_query -> retrieve -> grade -> generate -> hallucination_check -> finalize",
+    "expected_behavior": "The agent must combine the EE catalog (course -> instructor name) and the faculty directory (instructor -> office) to answer.",
+    "result": {
+      "query": "Which professor in the Electrical Engineering department teaches Signals & Systems, and what is their office number?",
+      "final_answer": "The professor who teaches Signals & Systems in the Electrical Engineering department is Dr. eema nwar. \n\nUnfortunately, the provided context does not mention Dr. eema nwar's office number.",
+      "needs_retrieval": true,
+      "retrieval_reasoning": "The query requires looking up faculty members and their office locations.",
+      "used_web_fallback": false,
+      "retrieved_doc_count": 8,
+      "graded_doc_count": 2,
+      "web_result_count": 0,
+      "retry_count": 0,
+      "hallucination_grounded": true,
+      "decision_trace": [
+        "route_query: RETRIEVE \u2014 The query requires looking up faculty members and their office locations.",
+        "retrieve_node: pulled 8 candidate chunks from ChromaDB",
+        "grade_documents: kept 2/8 as relevant\n  doc[0] faculty/Faculty Row -> YES\n  doc[1] catalog/Department Overview -> NO\n  doc[2] catalog/EE-202 Signals & Systems -> YES\n  doc[3] catalog/EE-210 Electromagnetic Theory -> NO\n  doc[4] faculty/Faculty Row -> NO\n  doc[5] faculty/Faculty Row -> NO\n  doc[6] faculty/Faculty Row -> NO\n  doc[7] catalog/EE-320 Power Systems -> NO",
+        "generate_node: produced initial answer using kb context",
+        "hallucination_check: grounded=True  (YES)",
+        "finalize: response grounded \u2014 returning to user"
+      ],
+      "latency_ms": 36779,
+      "graded_doc_metadata": [
+        {
+          "doc_type": "faculty",
+          "course_code": "",
+          "section_title": "Faculty Row",
+          "department": "EE",
+          "faculty_name": "Dr. eema nwar Electrical Eng. Assoc. Professor Signal Processing, Contro",
+          "course_level": "n/a",
+          "source_file": "Faculty_Directory.pdf"
+        },
+        {
+          "source_file": "EE_Department_Catalog.pdf",
+          "course_code": "EE-202",
+          "department": "EE",
+          "faculty_name": "",
+          "section_title": "EE-202 Signals & Systems",
+          "doc_type": "catalog",
+          "course_level": "undergraduate"
+        }
+      ]
+    },
+    "elapsed_ms": 36779
+  },
+  {
+    "id": 6,
+    "scenario": "Policy lookup (bonus)",
+    "query": "What is the late registration fee and the minimum CGPA required to graduate?",
+    "expected_path": "route_query -> retrieve -> grade -> generate -> hallucination_check -> finalize",
+    "expected_behavior": "Agent should pull the relevant policy chunks (PKR 5000 late fee, 2.00 CGPA minimum) and answer both facts.",
+    "result": {
+      "query": "What is the late registration fee and the minimum CGPA required to graduate?",
+      "final_answer": "The late registration fee is PKR 5,000 [source: Course Registration | University_Academic_Policies.pdf].\n\nThe minimum CGPA required to graduate is 2.00 [source: GPA and CGPA | University_Academic_Policies.pdf].",
+      "needs_retrieval": true,
+      "retrieval_reasoning": "The query requires specific university policies regarding registration and graduation requirements.",
+      "used_web_fallback": false,
+      "retrieved_doc_count": 8,
+      "graded_doc_count": 2,
+      "web_result_count": 0,
+      "retry_count": 0,
+      "hallucination_grounded": true,
+      "decision_trace": [
+        "route_query: RETRIEVE \u2014 The query requires specific university policies regarding registration and graduation requirements.",
+        "retrieve_node: pulled 8 candidate chunks from ChromaDB",
+        "grade_documents: kept 2/8 as relevant\n  doc[0] policy/Course Registration -> YES\n  doc[1] policy/GPA and CGPA -> YES\n  doc[2] policy/Fee Structure (Per Semester) -> NO\n  doc[3] policy/Prerequisite Policy -> NO\n  doc[4] policy/Attendance Policy -> NO\n  doc[5] policy/Transfer Credit Policy -> NO\n  doc[6] policy/Degree Requirements -> NO\n  doc[7] policy/Course Withdrawal -> NO",
+        "generate_node: produced initial answer using kb context",
+        "hallucination_check: grounded=True  (YES)",
+        "finalize: response grounded \u2014 returning to user"
+      ],
+      "latency_ms": 36768,
+      "graded_doc_metadata": [
+        {
+          "course_code": "",
+          "faculty_name": "",
+          "source_file": "University_Academic_Policies.pdf",
+          "section_title": "Course Registration",
+          "course_level": "n/a",
+          "department": "university",
+          "doc_type": "policy"
+        },
+        {
+          "doc_type": "policy",
+          "department": "university",
+          "course_level": "n/a",
+          "section_title": "GPA and CGPA",
+          "faculty_name": "",
+          "source_file": "University_Academic_Policies.pdf",
+          "course_code": ""
+        }
+      ]
+    },
+    "elapsed_ms": 36768
+  }
+]
